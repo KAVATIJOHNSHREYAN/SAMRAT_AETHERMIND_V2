@@ -144,6 +144,8 @@ export default function Home() {
     setMessages,
     addMessage,
     updateLastMessageChunk,
+    isLoadingChats,
+    isLoadingMessages,
     setIsLoadingChats,
     setIsLoadingMessages,
     isStreaming,
