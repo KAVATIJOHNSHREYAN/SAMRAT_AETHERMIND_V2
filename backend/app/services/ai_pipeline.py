@@ -180,7 +180,7 @@ async def generate_response_stream(
     # ---------------- FALLBACK ----------------
     fallback_replies = {
         "hello": "Hello! AetherMind is online.",
-        "who created you": "I was developed as a portfolio chatbot using FastAPI and Next.js.",
+        "who created you": "I was developed as a portfolio chatbot using FastAPI and Next.js by my creator Mister John Shreyan.",
         "what is your name": "I am AetherMind."
     }
 
@@ -193,7 +193,15 @@ async def generate_response_stream(
             break
 
     if not matched_reply:
-        matched_reply = f"Sandbox Mode Active. You asked: {query}"
+        import google.generativeai as genai
+        import os
+        try:
+            genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            response = model.generate_content(query)
+            matched_reply = response.text
+        except Exception as e:
+            matched_reply = f"AI Error: {str(e)}"
 
     words = matched_reply.split()
 
