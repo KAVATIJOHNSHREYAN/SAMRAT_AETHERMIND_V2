@@ -204,10 +204,9 @@ async def generate_response_stream(
             matched_reply = f"AI Error: {str(e)}"
 
     words = matched_reply.split()
-
     for i, word in enumerate(words):
-        if i < len(words) - 1:
-            yield word + " "
-        else:
-            yield word
+        yield f"data: {{\"chunk\": \"{word} \"}}\n\n"
         await asyncio.sleep(0.05)
+
+    yield "data: [DONE]\n\n"
+    return
