@@ -128,8 +128,7 @@ async def generate_response_stream(
                 temperature=temperature
             )
 
-            # FORCE MODEL FIX
-            selected_model = "gemini-2.5-flash"
+            selected_model = model_name
 
             print("Using Gemini Model:", selected_model)
 
@@ -195,7 +194,7 @@ async def generate_response_stream(
     if not matched_reply:
         try:
             genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-            model = genai.GenerativeModel("gemini-2.5-flash")
+            model = genai.GenerativeModel(model_name)
             response = model.generate_content(query)
             matched_reply = response.text
         except Exception as e:
