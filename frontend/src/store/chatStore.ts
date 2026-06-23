@@ -121,8 +121,8 @@ export const useChatStore = create<ChatStoreState>((set) => ({
   modelSettings: {
     modelName:
       typeof window !== 'undefined'
-        ? localStorage.getItem('aether_model_name') || 'gemini-1.5-flash'
-        : 'gemini-1.5-flash',
+        ? localStorage.getItem('aether_model_name') || 'gemini-2.5-flash'
+        : 'gemini-2.5-flash',
 
     temperature:
       typeof window !== 'undefined'
