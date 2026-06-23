@@ -72,6 +72,8 @@ async def generate_response_stream(
     # 3. Provider Detection
     is_openai_model = model_name.startswith("gpt-")
     effective_openai_key = openai_key or os.getenv("OPENAI_API_KEY")
+    if gemini_key == "123456":
+        gemini_key = None
     effective_gemini_key = gemini_key or os.getenv("GEMINI_API_KEY")
 
     print("Gemini Key Loaded:", effective_gemini_key)
