@@ -230,6 +230,7 @@ export default function Home() {
   const handleStarterPrompt = async (prompt: string) => {
     if (!token) return;
     if (isStreaming || isLoadingMessages) return;
+    setIsStreaming(true);
     try {
       const newChat = await apiService.createChat(token!, prompt.substring(0, 30), 'general');
       setChats([newChat, ...chats]);
@@ -553,6 +554,7 @@ export default function Home() {
     if (isStreaming || isLoadingMessages) return;
     if ((!chatInput.trim() && !chatAttachment) || !token) return;
 
+    setIsStreaming(true);
     let currentChatId = activeChatId;
     if (!currentChatId) {
       try {
@@ -563,6 +565,7 @@ export default function Home() {
         setMessages([]);
       } catch (err) {
         console.error(err);
+        setIsStreaming(false);
         return;
       }
     }
@@ -589,8 +592,6 @@ export default function Home() {
       created_at: new Date().toISOString()
     };
     addMessage(assistantMsg);
-
-    setIsStreaming(true);
 
     // Capture and clear attachment
     const currentAttachment = chatAttachment ? [chatAttachment] : null;
