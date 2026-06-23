@@ -1,0 +1,70 @@
+services:
+  # 1. FastAPI Web Server API
+  - type: web
+    name: aetherchat-api
+    env: python
+    buildCommand: pip install -r requirements.txt && python -m spacy download en_core_web_sm
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aetherchat-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: aetherchat-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: STABILITY_API_KEY
+        sync: false
+      - key: REPLICATE_API_KEY
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false
+
+  # 2. Celery Asynchronous Task Worker
+  - type: worker
+    name: aetherchat-worker
+    env: python
+    buildCommand: pip install -r requirements.txt && python -m spacy download en_core_web_sm
+    startCommand: celery -A app.tasks.celery_app worker --loglevel=info
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aetherchat-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: aetherchat-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: REPLICATE_API_KEY
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false
+
+  # 3. Redis Task Broker
+  - type: redis
+    name: aetherchat-redis
+    ipAllowList: [] # Private/Internal connection only
+
+databases:
+  # 4. PostgreSQL Database
+  - name: aetherchat-db
+    ipAllowList: [] # Private/Internal connection only
