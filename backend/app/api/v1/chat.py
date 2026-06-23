@@ -220,7 +220,7 @@ def post_message(
             query=payload.content, 
             chat_history=history, 
             chat_mode=chat.mode,
-            model_name=payload.model_name,
+            active_model=payload.model_name,
             temperature=payload.temperature,
             system_prompt=payload.system_prompt,
             enable_rag=payload.enable_rag,

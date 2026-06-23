@@ -15,7 +15,7 @@ async def generate_response_stream(
     query: str,
     chat_history: List[Dict[str, str]],
     chat_mode: str = "general",
-    model_name: str = "gemini-2.5-flash",
+    active_model: str = "gemini-2.5-flash",
     temperature: float = 0.7,
     system_prompt: str = None,
     enable_rag: bool = True,
@@ -72,8 +72,9 @@ async def generate_response_stream(
             system_instructions += " Give short and conversational responses."
 
     # 3. Provider Detection
-    is_openai_model = model_name.startswith("gpt-")
-    is_cohere_model = model_name.startswith("command")
+    is_openai_model = active_model.startswith("gpt-")
+    is_cohere_model = active_model.startswith("cohere")
+    is_gemini_model = active_model.startswith("gemini")
     effective_openai_key = openai_key or os.getenv("OPENAI_API_KEY")
     if gemini_key == "123456":
         gemini_key = None
@@ -110,7 +111,7 @@ async def generate_response_stream(
 
             response = await asyncio.to_thread(
                 client.chat.completions.create,
-                model=model_name,
+                model=active_model,
                 messages=messages,
                 temperature=temperature,
                 stream=True
@@ -129,7 +130,8 @@ async def generate_response_stream(
     # ---------------- COHERE ----------------
     elif is_cohere_model and effective_cohere_key:
         try:
-            print("Using Cohere Model:", model_name)
+            real_cohere_model = active_model.replace("cohere-", "")
+            print("Using Cohere Model:", real_cohere_model)
             co = cohere.AsyncClient(api_key=effective_cohere_key)
             
             chat_history_cohere = []
@@ -146,7 +148,7 @@ async def generate_response_stream(
 
             response = await co.chat_stream(
                 message=user_content,
-                model=model_name,
+                model=real_cohere_model,
                 preamble=system_instructions,
                 chat_history=chat_history_cohere,
                 temperature=temperature
@@ -166,20 +168,18 @@ async def generate_response_stream(
                 return
 
     # ---------------- GEMINI ----------------
-    elif effective_gemini_key:
+    elif is_gemini_model and effective_gemini_key:
         try:
             genai.configure(api_key=effective_gemini_key)
-
-            generation_config = genai.GenerationConfig(
+            
+            generation_config = genai.types.GenerationConfig(
                 temperature=temperature
             )
 
-            selected_model = model_name
-
-            print("Using Gemini Model:", selected_model)
+            print("Using Gemini Model:", active_model)
 
             model = genai.GenerativeModel(
-                model_name=selected_model,
+                model_name=active_model,
                 system_instruction=system_instructions
             )
 
@@ -240,7 +240,7 @@ async def generate_response_stream(
     if not matched_reply:
         try:
             genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-            model = genai.GenerativeModel(model_name)
+            model = genai.GenerativeModel(active_model)
             response = model.generate_content(query)
             matched_reply = response.text
         except Exception as e:
