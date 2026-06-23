@@ -150,24 +150,27 @@ async def generate_response_stream(
             return
 
         try:
-            stripped_model = active_model.replace("cohere-", "")
+           print("Incoming active_model:", active_model)
 
-            model_map = {
+        stripped_model = active_model.replace("cohere-", "")
+
+model_map = {
     "command-r": "command-r-08-2024",
     "command-r-plus": "command-r-plus-08-2024",
     "command-light": "command-r7b-12-2024"
 }
 
-            real_cohere_model = model_map.get(
-                stripped_model,
-                "command-r-plus"
-            )
+real_cohere_model = model_map.get(
+    stripped_model,
+    "command-r-plus-08-2024"
+)
 
-            print("Using Cohere:", real_cohere_model)
+print("Stripped model:", stripped_model)
+print("Mapped model:", real_cohere_model)
 
-            co = cohere.AsyncClient(
-                api_key=effective_cohere_key
-            )
+co = cohere.AsyncClient(
+    api_key=effective_cohere_key
+)
 
             chat_history_cohere = []
 
