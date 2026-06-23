@@ -240,7 +240,7 @@ def chat_endpoint(
             enable_rag=payload.enable_rag,
             rag_k=payload.rag_k,
             openai_key=x_openai_api_key,
-            gemini_key=x_openai_api_key, # Use key from header if provided
+            gemini_key=x_gemini_api_key, # Use key from header if provided
             attachments=attachments_list,
             user_id=user_id
         ):

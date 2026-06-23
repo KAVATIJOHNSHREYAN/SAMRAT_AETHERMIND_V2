@@ -129,7 +129,7 @@ async def generate_response_stream(
             )
 
             # FORCE MODEL FIX
-            selected_model = "models/gemini-2.5-flash"
+            selected_model = "gemini-1.5-flash"
 
             print("Using Gemini Model:", selected_model)
 
@@ -167,9 +167,7 @@ async def generate_response_stream(
 
             for chunk in response:
                 if chunk.text:
-                    yield f'data: {{"chunk":"{chunk.text}"}}\n\n'
-
-            yield "data: [DONE]\n\n"
+                    yield chunk.text
 
             return
 
@@ -195,8 +193,6 @@ async def generate_response_stream(
             matched_reply = value
             break
     if not matched_reply:
-        import google.generativeai as genai
-        import os
         try:
             genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
             model = genai.GenerativeModel("gemini-1.5-flash")
