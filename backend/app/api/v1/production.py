@@ -120,7 +120,8 @@ def chat_endpoint(
     db: Session = Depends(get_db),
     x_gemini_api_key: Optional[str] = Header(None, alias="X-Gemini-API-Key"),
     x_openai_api_key: Optional[str] = Header(None, alias="X-OpenAI-API-Key"),
-    x_replicate_api_key: Optional[str] = Header(None, alias="X-Replicate-API-Key")
+    x_replicate_api_key: Optional[str] = Header(None, alias="X-Replicate-API-Key"),
+    x_cohere_api_key: Optional[str] = Header(None, alias="X-Cohere-API-Key")
 ):
     """
     Unified chat endpoint. Streams responses back. Saves history if user is authenticated and chat_id is provided.
@@ -240,7 +241,8 @@ def chat_endpoint(
             enable_rag=payload.enable_rag,
             rag_k=payload.rag_k,
             openai_key=x_openai_api_key,
-            gemini_key=x_gemini_api_key, # Use key from header if provided
+            gemini_key=x_gemini_api_key,
+            cohere_key=x_cohere_api_key,
             attachments=attachments_list,
             user_id=user_id
         ):
