@@ -194,7 +194,6 @@ async def generate_response_stream(
         if key in query_lower:
             matched_reply = value
             break
-
     if not matched_reply:
         import google.generativeai as genai
         import os
@@ -207,9 +206,10 @@ async def generate_response_stream(
             matched_reply = f"AI Error: {str(e)}"
 
     words = matched_reply.split()
-    for i, word in enumerate(words):
-        yield f"data: {{\"chunk\": \"{word} \"}}\n\n"
-        await asyncio.sleep(0.05)
 
-    yield "data: [DONE]\n\n"
-    return
+    for i, word in enumerate(words):
+        if i < len(words) - 1:
+            yield word + " "
+        else:
+            yield word
+        await asyncio.sleep(0.05)
