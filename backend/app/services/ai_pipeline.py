@@ -195,15 +195,7 @@ async def generate_response_stream(
             matched_reply = value
             break
     if not matched_reply:
-        import google.generativeai as genai
-        import os
-        try:
-            genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            response = model.generate_content(query)
-            matched_reply = response.text
-        except Exception as e:
-            matched_reply = f"AI Error: {str(e)}"
+        matched_reply = f"Sandbox Mode Active. You asked: {query}"
 
     words = matched_reply.split()
 
