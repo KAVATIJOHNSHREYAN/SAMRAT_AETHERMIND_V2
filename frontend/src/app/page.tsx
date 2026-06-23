@@ -229,6 +229,7 @@ export default function Home() {
 
   const handleStarterPrompt = async (prompt: string) => {
     if (!token) return;
+    if (isStreaming || isLoadingMessages) return;
     try {
       const newChat = await apiService.createChat(token!, prompt.substring(0, 30), 'general');
       setChats([newChat, ...chats]);
@@ -549,7 +550,8 @@ export default function Home() {
 
   const handleSendTextMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatInput.trim() || !token) return;
+    if (isStreaming || isLoadingMessages) return;
+    if ((!chatInput.trim() && !chatAttachment) || !token) return;
 
     let currentChatId = activeChatId;
     if (!currentChatId) {
@@ -1527,7 +1529,7 @@ export default function Home() {
 
       <button
         type="submit"
-        disabled={!chatInput.trim() && !chatAttachment}
+        disabled={isStreaming || isLoadingMessages || (!chatInput.trim() && !chatAttachment)}
         className={`p-2.5 rounded-xl transition-all shadow-md cursor-pointer flex-shrink-0 ${isHacker
           ? 'bg-black border border-emerald-500 disabled:border-emerald-500/20 text-emerald-400 disabled:text-emerald-800'
           : 'bg-violet-600 hover:bg-violet-500 disabled:bg-slate-800 text-white disabled:text-slate-500'
