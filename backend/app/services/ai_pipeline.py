@@ -153,10 +153,10 @@ async def generate_response_stream(
             stripped_model = active_model.replace("cohere-", "")
 
             model_map = {
-                "command-r": "command-r-plus",
-                "command-r-plus": "command-r-plus",
-                "command-light": "command-r"
-            }
+    "command-r": "command-r-08-2024",
+    "command-r-plus": "command-r-plus-08-2024",
+    "command-light": "command-r7b-12-2024"
+}
 
             real_cohere_model = model_map.get(
                 stripped_model,
@@ -187,7 +187,7 @@ async def generate_response_stream(
                     f"User Query: {query}"
                 )
 
-            response = await co.chat_stream(
+            response = co.chat_stream(
                 model=real_cohere_model,
                 message=user_content,
                 temperature=temperature,
