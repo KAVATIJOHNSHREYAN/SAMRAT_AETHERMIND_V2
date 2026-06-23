@@ -2138,6 +2138,17 @@ export default function Home() {
                     />
                   </div>
                   <div>
+                    <label className={`block text-[10px] mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Cohere API Key</label>
+                    <input
+                      type="password"
+                      value={modelSettings.cohereApiKey}
+                      onChange={(e) => setModelSettings({ cohereApiKey: e.target.value })}
+                      placeholder="Zi..."
+                      className={`w-full px-3 py-2 border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-violet-500 font-mono ${isDark ? 'bg-slate-900 border-slate-855 text-slate-200 placeholder-slate-700' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
+                        }`}
+                    />
+                  </div>
+                  <div>
                     <label className={`block text-[10px] mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>OpenAI API Key</label>
                     <input
                       type="password"
@@ -2148,17 +2159,6 @@ export default function Home() {
                         }`}
                     />
                   </div>
-                    <div>
-                      <label className={`block text-[10px] mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Cohere API Key</label>
-                      <input
-                        type="password"
-                        value={modelSettings.cohereApiKey}
-                        onChange={(e) => setModelSettings({ cohereApiKey: e.target.value })}
-                        placeholder="Zi..."
-                        className={`w-full px-3 py-2 border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-violet-500 font-mono ${isDark ? 'bg-slate-900 border-slate-855 text-slate-200 placeholder-slate-700' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
-                          }`}
-                      />
-                    </div>
                     <div>
                       <label className={`block text-[10px] mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Replicate API Key (Image/Video Gen)</label>
                     <input

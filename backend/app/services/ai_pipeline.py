@@ -153,7 +153,7 @@ async def generate_response_stream(
             if context_str:
                 user_content = f"Background Context:\n{context_str}\n\nUser Query: {query}"
 
-            response = co.chat_stream(
+            response = await co.chat_stream(
                 message=user_content,
                 model=real_cohere_model,
                 preamble=system_instructions,
