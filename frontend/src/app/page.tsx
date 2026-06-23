@@ -1237,7 +1237,7 @@ export default function Home() {
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-800 pb-44">
         {!activeChatId ? (
-          <div className="min-h-full flex flex-col items-center justify-start pt-8 pb-44 px-4 max-w-3xl mx-auto">
+          <div className="min-h-full flex flex-col items-center justify-end pb-12 px-4 max-w-3xl mx-auto">
                     <div className="relative flex flex-col items-center justify-center mb-6 w-full">
                       <div className="relative w-56 h-56 flex items-center justify-center">
                         <div className={`absolute w-44 h-44 rounded-full blur-2xl animate-pulse pointer-events-none ${
