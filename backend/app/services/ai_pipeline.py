@@ -167,7 +167,10 @@ async def generate_response_stream(
 
             for chunk in response:
                 if chunk.text:
-                    yield chunk.text
+                    yield f'data: {{"chunk":"{chunk.text}"}}\n\n'
+
+            yield "data: [DONE]\n\n"
+
             return
 
         except Exception as e:
