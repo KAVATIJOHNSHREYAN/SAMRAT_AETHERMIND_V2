@@ -367,6 +367,9 @@ export default function Home() {
           console.warn('Unauthorized session detected. Clearing credentials.');
           localStorage.removeItem('aether_token');
           localStorage.removeItem('aether_user');
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user_email');
+          localStorage.removeItem('user_id');
           window.location.reload();
         }
         return response;

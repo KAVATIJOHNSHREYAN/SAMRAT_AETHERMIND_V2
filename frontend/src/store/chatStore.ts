@@ -94,6 +94,15 @@ interface ChatStoreState {
   setActiveMode: (mode: string) => void;
 }
 
+const safeJSONParse = (val: string | null, fallback: any) => {
+  if (!val || val === 'undefined') return fallback;
+  try {
+    return JSON.parse(val);
+  } catch (e) {
+    return fallback;
+  }
+};
+
 export const useChatStore = create<ChatStoreState>((set) => ({
   chats: [],
   activeChatId: null,
@@ -103,7 +112,7 @@ export const useChatStore = create<ChatStoreState>((set) => ({
   isStreaming: false,
   theme: 'dark',
   token: typeof window !== 'undefined' ? (localStorage.getItem('aether_token') || localStorage.getItem('auth_token')) : null,
-  user: typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('aether_user') || 'null') || (localStorage.getItem('user_email') ? { email: localStorage.getItem('user_email'), id: localStorage.getItem('user_id') } : null)) : null,
+  user: typeof window !== 'undefined' ? (safeJSONParse(localStorage.getItem('aether_user'), null) || (localStorage.getItem('user_email') ? { email: localStorage.getItem('user_email'), id: localStorage.getItem('user_id') } : null)) : null,
   modelSettings: {
     modelName: typeof window !== 'undefined' ? localStorage.getItem('aether_model_name') || 'gemini-1.5-flash' : 'gemini-1.5-flash',
     temperature: typeof window !== 'undefined' ? parseFloat(localStorage.getItem('aether_temperature') || '0.7') : 0.7,
@@ -134,7 +143,7 @@ export const useChatStore = create<ChatStoreState>((set) => ({
     continuousMode: typeof window !== 'undefined' ? localStorage.getItem('aether_continuous_mode') === 'true' : false,
     wakeWord: typeof window !== 'undefined' ? localStorage.getItem('aether_wake_word') || 'Aether' : 'Aether',
   },
-  hiddenChatIds: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('aether_hidden_chats') || '[]') : [],
+  hiddenChatIds: typeof window !== 'undefined' ? safeJSONParse(localStorage.getItem('aether_hidden_chats'), []) : [],
   lockChats: typeof window !== 'undefined' ? localStorage.getItem('aether_lock_chats') !== 'false' : true,
 
   setChats: (chats) => set({ chats }),
