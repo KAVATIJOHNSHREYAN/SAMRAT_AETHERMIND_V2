@@ -691,7 +691,7 @@ export default function Home() {
 
   // Render view templates
   const getThemeWrapperClass = () => {
-    const base = "w-full min-h-screen flex flex-col justify-between overflow-x-hidden transition-colors duration-300";
+    const base = "w-full h-[100dvh] flex flex-col justify-between overflow-hidden transition-colors duration-300";
     let mode = appearanceSettings.theme === 'dark' ? 'bg-[#070513] text-slate-100' : 'bg-slate-50 text-slate-900';
 
     let styleClass = '';
@@ -997,7 +997,7 @@ export default function Home() {
 
       {/* ----------------- SCREEN 3: UNIFIED CHAT WORKSPACE ----------------- */}
       {activeScreen === 'chat' && (
-        <div className="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
+        <div className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
           {/* Top Navbar */}
           <nav className={`py-3 px-6 border-b backdrop-blur-xl flex items-center justify-between transition-colors z-20 ${
             isHacker
