@@ -1291,7 +1291,7 @@ export default function Home() {
                           return (
                             <button
                               key={idx}
-                              onClick={() => handleStarterPrompt(item.prompt)}
+                              onClick={() => setChatInput(item.prompt)}
                               className={`p-4 rounded-2xl border text-left transition-all duration-300 hover:scale-[1.01] hover:shadow-lg flex items-center gap-4 ${
                                 isHacker
                                   ? 'bg-black border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-950/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]'
@@ -1506,11 +1506,21 @@ export default function Home() {
         </button>
       </div>
 
-      <input
-        type="text"
+      <textarea
         value={chatInput}
         onChange={(e) => setChatInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!isStreaming && !isLoadingMessages && (chatInput.trim() || chatAttachment)) {
+              const formEvent = new Event('submit', { cancelable: true, bubbles: true }) as unknown as React.FormEvent<HTMLFormElement>;
+              handleSendTextMessage(formEvent);
+            }
+          }
+        }}
         placeholder={isHacker ? `INQUIRE_SYS_MODE_${activeMode.toUpperCase()}...` : `Inquire in ${activeMode} Mode...`}
+        rows={1}
+        style={{ resize: 'none' }}
         className={`flex-1 bg-transparent px-2 py-2 text-xs focus:outline-none transition-all placeholder-slate-500 ${isHacker ? 'text-emerald-400 placeholder-emerald-900 font-mono' : isDark ? 'text-slate-100 font-bold' : 'text-slate-900 font-bold'
           }`}
       />
@@ -2043,6 +2053,7 @@ export default function Home() {
                     className={`w-full px-3 py-2 border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold ${isDark ? 'bg-slate-900 border-slate-855 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-900'
                       }`}
                   >
+                    <option value="">Disabled (None)</option>
                     {['Samrat', 'Aether', 'Echo', 'Friday'].map(w => <option key={w} value={w}>{w}</option>)}
                   </select>
                 </div>

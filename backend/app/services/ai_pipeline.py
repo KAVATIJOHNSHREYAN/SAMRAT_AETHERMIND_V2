@@ -159,13 +159,16 @@ async def generate_response_stream(
             return
             
         try:
-            # Map deprecated model names to current active versions
+            # Strip the 'cohere-' prefix to ensure only valid Cohere models are used
+            stripped_model = active_model.replace("cohere-", "")
+            
+            # Map stripped model names to current active versions
             model_map = {
-                "cohere-command-r-plus": "command-r-plus-08-2024",
-                "cohere-command-r": "command-r-08-2024",
-                "cohere-command-light": "command-r7b-12-2024"
+                "command-r-plus": "command-r-plus-08-2024",
+                "command-r": "command-r-08-2024",
+                "command-light": "command-r7b-12-2024"
             }
-            real_cohere_model = model_map.get(active_model, "command-r-plus-08-2024")
+            real_cohere_model = model_map.get(stripped_model, "command-r-plus-08-2024")
             
             print("Using Cohere Model:", real_cohere_model)
             co = cohere.AsyncClient(api_key=effective_cohere_key)
