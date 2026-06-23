@@ -16,6 +16,12 @@ export interface ChatMessage {
   created_at: string;
 }
 
+export interface ToastMessage {
+  id: number;
+  message: string;
+  type: 'error' | 'success' | 'info';
+}
+
 export interface ModelSettings {
   modelName: string;
   temperature: number;
@@ -24,8 +30,8 @@ export interface ModelSettings {
   ragK: number;
   geminiApiKey: string;
   openaiApiKey: string;
-  replicateApiKey: string;
   cohereApiKey: string;
+  replicateApiKey: string;
 }
 
 export interface ProfileSettings {
@@ -50,6 +56,9 @@ export interface VoiceSettings {
   pitch: number;
   continuousMode: boolean;
   wakeWord: string;
+  wakeWordSensitivity: number;
+  activationSoundEnabled: boolean;
+  wakeWordEnabled: boolean;
 }
 
 interface ChatStoreState {
@@ -69,7 +78,8 @@ interface ChatStoreState {
   voiceSettings: VoiceSettings;
   hiddenChatIds: string[];
   lockChats: boolean;
-  
+  toasts: ToastMessage[];
+
   setChats: (chats: ChatRoom[]) => void;
   setLockChats: (val: boolean) => void;
   setActiveChatId: (id: string | null) => void;
@@ -93,37 +103,66 @@ interface ChatStoreState {
   setSidebarOpen: (val: boolean) => void;
   activeMode: string;
   setActiveMode: (mode: string) => void;
+  addToast: (message: string, type?: 'error' | 'success' | 'info') => void;
+  removeToast: (id: number) => void;
 }
-
-const safeJSONParse = (val: string | null, fallback: any) => {
-  if (!val || val === 'undefined') return fallback;
-  try {
-    return JSON.parse(val);
-  } catch (e) {
-    return fallback;
-  }
-};
 
 export const useChatStore = create<ChatStoreState>((set) => ({
   chats: [],
   activeChatId: null,
   messages: [],
+  toasts: [],
   isLoadingChats: false,
   isLoadingMessages: false,
   isStreaming: false,
   theme: 'dark',
   token: typeof window !== 'undefined' ? (localStorage.getItem('aether_token') || localStorage.getItem('auth_token')) : null,
-  user: typeof window !== 'undefined' ? (safeJSONParse(localStorage.getItem('aether_user'), null) || (localStorage.getItem('user_email') ? { email: localStorage.getItem('user_email'), id: localStorage.getItem('user_id') } : null)) : null,
+  user: typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('aether_user') || 'null') || (localStorage.getItem('user_email') ? { email: localStorage.getItem('user_email'), id: localStorage.getItem('user_id') } : null)) : null,
   modelSettings: {
-    modelName: typeof window !== 'undefined' ? localStorage.getItem('aether_model_name') || 'command-r-plus' : 'command-r-plus',
-    temperature: typeof window !== 'undefined' ? parseFloat(localStorage.getItem('aether_temperature') || '0.7') : 0.7,
-    systemPrompt: typeof window !== 'undefined' ? localStorage.getItem('aether_system_prompt') || '' : '',
-    enableRag: typeof window !== 'undefined' ? localStorage.getItem('aether_enable_rag') !== 'false' : true,
-    ragK: typeof window !== 'undefined' ? parseInt(localStorage.getItem('aether_rag_k') || '3') : 3,
-    geminiApiKey: typeof window !== 'undefined' ? localStorage.getItem('aether_gemini_api_key') || '' : '',
-    openaiApiKey: typeof window !== 'undefined' ? localStorage.getItem('aether_openai_api_key') || '' : '',
-    replicateApiKey: typeof window !== 'undefined' ? localStorage.getItem('aether_replicate_api_key') || '' : '',
-    cohereApiKey: typeof window !== 'undefined' ? localStorage.getItem('aether_cohere_api_key') || '' : '',
+    modelName:
+      typeof window !== 'undefined'
+        ? localStorage.getItem('aether_model_name') || 'gemini-1.5-flash'
+        : 'gemini-1.5-flash',
+
+    temperature:
+      typeof window !== 'undefined'
+        ? parseFloat(localStorage.getItem('aether_temperature') || '0.7')
+        : 0.7,
+
+    systemPrompt:
+      typeof window !== 'undefined'
+        ? localStorage.getItem('aether_system_prompt') || ''
+        : '',
+
+    enableRag:
+      typeof window !== 'undefined'
+        ? localStorage.getItem('aether_enable_rag') !== 'false'
+        : true,
+
+    ragK:
+      typeof window !== 'undefined'
+        ? parseInt(localStorage.getItem('aether_rag_k') || '3')
+        : 3,
+
+    geminiApiKey:
+      typeof window !== 'undefined'
+        ? localStorage.getItem('aether_gemini_api_key') || ''
+        : '',
+
+    openaiApiKey:
+      typeof window !== 'undefined'
+        ? localStorage.getItem('aether_openai_api_key') || ''
+        : '',
+
+    cohereApiKey:
+      typeof window !== 'undefined'
+        ? localStorage.getItem('aether_cohere_api_key') || ''
+        : '',
+
+    replicateApiKey:
+      typeof window !== 'undefined'
+        ? localStorage.getItem('aether_replicate_api_key') || ''
+        : '',
   },
   profileSettings: {
     username: typeof window !== 'undefined' ? localStorage.getItem('aether_username') || '' : '',
@@ -143,9 +182,12 @@ export const useChatStore = create<ChatStoreState>((set) => ({
     speed: typeof window !== 'undefined' ? parseFloat(localStorage.getItem('aether_voice_speed') || '1.0') : 1.0,
     pitch: typeof window !== 'undefined' ? parseFloat(localStorage.getItem('aether_voice_pitch') || '1.0') : 1.0,
     continuousMode: typeof window !== 'undefined' ? localStorage.getItem('aether_continuous_mode') === 'true' : false,
-    wakeWord: typeof window !== 'undefined' ? localStorage.getItem('aether_wake_word') || 'Aether' : 'Aether',
+    wakeWord: typeof window !== 'undefined' ? localStorage.getItem('aether_wake_word') || 'Samrat' : 'Samrat',
+    wakeWordSensitivity: typeof window !== 'undefined' ? parseFloat(localStorage.getItem('aether_voice_sensitivity') || '0.5') : 0.5,
+    activationSoundEnabled: typeof window !== 'undefined' ? localStorage.getItem('aether_voice_activation_sound') !== 'false' : true,
+    wakeWordEnabled: typeof window !== 'undefined' ? localStorage.getItem('aether_wake_word_enabled') !== 'false' : true,
   },
-  hiddenChatIds: typeof window !== 'undefined' ? safeJSONParse(localStorage.getItem('aether_hidden_chats'), []) : [],
+  hiddenChatIds: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('aether_hidden_chats') || '[]') : [],
   lockChats: typeof window !== 'undefined' ? localStorage.getItem('aether_lock_chats') !== 'false' : true,
 
   setChats: (chats) => set({ chats }),
@@ -203,8 +245,8 @@ export const useChatStore = create<ChatStoreState>((set) => ({
       localStorage.setItem('aether_rag_k', nextSettings.ragK.toString());
       localStorage.setItem('aether_gemini_api_key', nextSettings.geminiApiKey);
       localStorage.setItem('aether_openai_api_key', nextSettings.openaiApiKey);
-      localStorage.setItem('aether_replicate_api_key', nextSettings.replicateApiKey);
       localStorage.setItem('aether_cohere_api_key', nextSettings.cohereApiKey);
+      localStorage.setItem('aether_replicate_api_key', nextSettings.replicateApiKey);
     }
     return { modelSettings: nextSettings };
   }),
@@ -243,6 +285,8 @@ export const useChatStore = create<ChatStoreState>((set) => ({
       localStorage.setItem('aether_voice_pitch', nextSettings.pitch.toString());
       localStorage.setItem('aether_continuous_mode', nextSettings.continuousMode.toString());
       localStorage.setItem('aether_wake_word', nextSettings.wakeWord);
+      localStorage.setItem('aether_voice_sensitivity', nextSettings.wakeWordSensitivity.toString());
+      localStorage.setItem('aether_voice_activation_sound', nextSettings.activationSoundEnabled.toString());
     }
     return { voiceSettings: nextSettings };
   }),
@@ -270,4 +314,12 @@ export const useChatStore = create<ChatStoreState>((set) => ({
   activeMode: 'general',
   setSidebarOpen: (val) => set({ isSidebarOpen: val }),
   setActiveMode: (mode) => set({ activeMode: mode }),
+  addToast: (message, type = 'error') => set((state) => {
+    const id = Date.now();
+    setTimeout(() => {
+      set((s) => ({ toasts: s.toasts.filter(t => t.id !== id) }));
+    }, 4000);
+    return { toasts: [...state.toasts, { id, message, type }] };
+  }),
+  removeToast: (id) => set((state) => ({ toasts: state.toasts.filter(t => t.id !== id) })),
 }));
