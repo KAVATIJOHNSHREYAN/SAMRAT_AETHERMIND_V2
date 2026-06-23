@@ -10,7 +10,7 @@ print("Key length:", len(key) if key else 0)
 try:
     genai.configure(api_key=key)
     generation_config = genai.GenerationConfig(temperature=0.7)
-    selected_model = "models/gemini-2.0-flash"
+    selected_model = "models/gemini-2.5-flash"
     
     model = genai.GenerativeModel(
         model_name=selected_model,
