@@ -19,7 +19,7 @@ from app.logging_config import logger
 logging.basicConfig(level=logging.INFO)
 app_logger = logging.getLogger(__name__)
 
-# Database initialization with error handling
+# Database initialization
 try:
     app_logger.info("Creating database tables...")
     Base.metadata.create_all(bind=engine)
@@ -28,10 +28,10 @@ except Exception as e:
     app_logger.error(f"Failed to create database tables: {e}")
     raise
 
-# Lifespan context manager for startup/shutdown events
+
+# Lifespan context manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup events
     try:
         app_logger.info(f"Starting {settings.PROJECT_NAME} API server...")
         app_logger.info(f"Project: {settings.PROJECT_NAME}")
@@ -40,13 +40,14 @@ async def lifespan(app: FastAPI):
         app_logger.error(f"Error during startup: {e}")
         raise
     finally:
-        # Shutdown events
         app_logger.info(f"Shutting down {settings.PROJECT_NAME} API server...")
         try:
             app_logger.info("Cleanup completed successfully")
         except Exception as e:
             app_logger.error(f"Error during shutdown: {e}")
 
+
+# FastAPI app
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version="1.0.0",
@@ -55,10 +56,18 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# CORS FIX
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # open for testing
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Error handlers
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
-    """Handle validation errors with proper logging."""
     app_logger.warning(f"Validation error on {request.url.path}: {exc}")
     return JSONResponse(
         status_code=422,
@@ -67,31 +76,29 @@ async def validation_exception_handler(request, exc):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
-    """Handle general exceptions with logging."""
     app_logger.error(f"Unhandled exception on {request.url.path}: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"},
     )
 
-# CORS configuration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Mount local static uploads directory
+# Static uploads
 if os.getenv("VERCEL"):
     uploads_dir = "/tmp/uploads"
 else:
-    uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))
-os.makedirs(uploads_dir, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
-app_logger.info(f"Static files mounted at /uploads: {uploads_dir}")
+    uploads_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "uploads")
+    )
 
+os.makedirs(uploads_dir, exist_ok=True)
+
+app.mount(
+    "/uploads",
+    StaticFiles(directory=uploads_dir),
+    name="uploads"
+)
+
+app_logger.info(f"Static files mounted at /uploads: {uploads_dir}")
 
 # Routers
 app.include_router(auth.router, prefix=settings.API_V1_STR)
@@ -99,29 +106,23 @@ app.include_router(profile.router, prefix=settings.API_V1_STR)
 app.include_router(chat.router, prefix=settings.API_V1_STR)
 app.include_router(upload.router, prefix=settings.API_V1_STR)
 
-# Mount production root-level APIs
+# Production routes
 app.include_router(production.router)
+
 
 @app.get("/")
 def read_root():
-    """Health check endpoint."""
-    app_logger.debug("Health check requested")
     return {
         "status": "online",
         "project": settings.PROJECT_NAME,
         "api_docs": "/docs"
     }
 
+
 @app.get("/health")
 def health_check():
-    """Detailed health check endpoint."""
-    app_logger.debug("Detailed health check requested")
     return {
         "status": "healthy",
         "service": settings.PROJECT_NAME,
         "version": "1.0.0"
     }
-
-# duplicate read_root removed
-
-
