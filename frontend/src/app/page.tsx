@@ -1848,8 +1848,9 @@ export default function Home() {
                       Light
                     </button>
                   </div>
-                             <div>
-                      <label className={`block text-[10px] uppercase font-bold mb-2.5 ${isDark ? 'text-slate-550' : 'text-slate-650'}`}>Interface Style</label>
+                </div>
+                <div>
+                  <label className={`block text-[10px] uppercase font-bold mb-2.5 ${isDark ? 'text-slate-550' : 'text-slate-650'}`}>Interface Style</label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {[
                           { id: 'Classic', icon: LayoutTemplate, desc: 'Standard UI' },
@@ -1882,9 +1883,8 @@ export default function Home() {
                           </button>
                         )})}
                       </div>
-                    </div>                </div>
-                  </div>
-                </div>
+                    </div>
+
 
                 <div className={`pt-4 border-t space-y-3.5 ${isDark ? 'border-slate-900' : 'border-slate-150'}`}>
                   <div className="flex items-center gap-2">
