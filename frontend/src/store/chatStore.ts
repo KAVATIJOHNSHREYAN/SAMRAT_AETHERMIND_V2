@@ -25,6 +25,7 @@ export interface ModelSettings {
   geminiApiKey: string;
   openaiApiKey: string;
   replicateApiKey: string;
+  cohereApiKey: string;
 }
 
 export interface ProfileSettings {
@@ -122,6 +123,7 @@ export const useChatStore = create<ChatStoreState>((set) => ({
     geminiApiKey: typeof window !== 'undefined' ? localStorage.getItem('aether_gemini_api_key') || '' : '',
     openaiApiKey: typeof window !== 'undefined' ? localStorage.getItem('aether_openai_api_key') || '' : '',
     replicateApiKey: typeof window !== 'undefined' ? localStorage.getItem('aether_replicate_api_key') || '' : '',
+    cohereApiKey: typeof window !== 'undefined' ? localStorage.getItem('aether_cohere_api_key') || '' : '',
   },
   profileSettings: {
     username: typeof window !== 'undefined' ? localStorage.getItem('aether_username') || '' : '',
@@ -202,6 +204,7 @@ export const useChatStore = create<ChatStoreState>((set) => ({
       localStorage.setItem('aether_gemini_api_key', nextSettings.geminiApiKey);
       localStorage.setItem('aether_openai_api_key', nextSettings.openaiApiKey);
       localStorage.setItem('aether_replicate_api_key', nextSettings.replicateApiKey);
+      localStorage.setItem('aether_cohere_api_key', nextSettings.cohereApiKey);
     }
     return { modelSettings: nextSettings };
   }),

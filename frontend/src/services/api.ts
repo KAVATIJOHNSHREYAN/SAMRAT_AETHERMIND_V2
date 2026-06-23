@@ -174,6 +174,9 @@ export const apiService = {
     if (settings.replicateApiKey) {
       headers['X-Replicate-API-Key'] = settings.replicateApiKey;
     }
+    if (settings.cohereApiKey) {
+      headers['X-Cohere-API-Key'] = settings.cohereApiKey;
+    }
 
     const res = await fetch(`${BASE_URL}/chat/${chatId}/message`, {
       method: 'POST',
@@ -337,6 +340,7 @@ export const apiService = {
     if (token) headers['Authorization'] = `Bearer ${token}`;
     if (settings.openaiApiKey) headers['X-OpenAI-API-Key'] = settings.openaiApiKey;
     if (settings.geminiApiKey) headers['X-Gemini-API-Key'] = settings.geminiApiKey;
+    if (settings.cohereApiKey) headers['X-Cohere-API-Key'] = settings.cohereApiKey;
 
     const formData = new FormData();
     formData.append('file', file);
@@ -369,6 +373,7 @@ export const apiService = {
     if (settings.geminiApiKey) headers['X-Gemini-API-Key'] = settings.geminiApiKey;
     if (settings.openaiApiKey) headers['X-OpenAI-API-Key'] = settings.openaiApiKey;
     if (settings.replicateApiKey) headers['X-Replicate-API-Key'] = settings.replicateApiKey;
+    if (settings.cohereApiKey) headers['X-Cohere-API-Key'] = settings.cohereApiKey;
 
     const res = await fetch(`${ROOT_URL}/chat`, {
       method: 'POST',
