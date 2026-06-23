@@ -44,7 +44,12 @@ import {
   Moon,
   Paperclip,
   Check,
-  Plus
+  Plus,
+  LayoutTemplate,
+  Zap,
+  Minus,
+  Layers,
+  Terminal
 } from 'lucide-react';
 
 // Helper to render message content with media blocks
@@ -1843,22 +1848,41 @@ export default function Home() {
                       Light
                     </button>
                   </div>
-                  <div>
-                    <label className={`block text-[10px] uppercase font-bold mb-1.5 ${isDark ? 'text-slate-550' : 'text-slate-650'}`}>Interface Style</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['Classic', 'Cyberpunk', 'Minimal', 'Glassmorphism', 'Hacker'].map(style => (
-                        <button
-                          key={style}
-                          onClick={() => setAppearanceSettings({ interfaceStyle: style as any })}
-                          className={`p-3 rounded-xl border text-left transition-all ${appearanceSettings.interfaceStyle === style
-                            ? 'border-violet-500 bg-violet-500/10'
-                            : isDark ? 'border-slate-800 bg-slate-900 hover:border-slate-700' : 'border-slate-200 bg-slate-50 hover:border-slate-300'
-                            }`}
-                        >
-                          <span className={`block text-xs font-extrabold ${appearanceSettings.interfaceStyle === style ? 'text-violet-400' : 'text-slate-550'}`}>{style}</span>
-                        </button>
-                      ))}
-                    </div>
+                             <div>
+                      <label className={`block text-[10px] uppercase font-bold mb-2.5 ${isDark ? 'text-slate-550' : 'text-slate-650'}`}>Interface Style</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {[
+                          { id: 'Classic', icon: LayoutTemplate, desc: 'Standard UI' },
+                          { id: 'Cyberpunk', icon: Zap, desc: 'Neon aesthetics' },
+                          { id: 'Minimal', icon: Minus, desc: 'Clean & simple' },
+                          { id: 'Glassmorphism', icon: Layers, desc: 'Frosted glass' },
+                          { id: 'Hacker', icon: Terminal, desc: 'Terminal mode' }
+                        ].map(style => {
+                          const IconComp = style.icon;
+                          const isActive = appearanceSettings.interfaceStyle === style.id;
+                          return (
+                          <button
+                            key={style.id}
+                            onClick={() => setAppearanceSettings({ interfaceStyle: style.id as any })}
+                            className={`p-3.5 rounded-2xl border text-left transition-all duration-300 hover:scale-[1.02] flex items-center gap-3 ${
+                              isActive
+                              ? 'border-violet-500 bg-violet-500/10 shadow-[0_0_15px_rgba(139,92,246,0.15)]'
+                              : isDark ? 'border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-900' : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+                              }`}
+                          >
+                            <div className={`p-2 rounded-xl flex-shrink-0 ${
+                              isActive ? 'bg-violet-500 text-white shadow-md' : isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'
+                            }`}>
+                              <IconComp className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <span className={`block text-xs font-bold ${isActive ? 'text-violet-400' : isDark ? 'text-slate-200' : 'text-slate-800'}`}>{style.id}</span>
+                              <span className={`block text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{style.desc}</span>
+                            </div>
+                          </button>
+                        )})}
+                      </div>
+                    </div>                </div>
                   </div>
                 </div>
 
