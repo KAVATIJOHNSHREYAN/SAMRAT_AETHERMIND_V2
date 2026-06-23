@@ -3,6 +3,7 @@ import asyncio
 import time
 from typing import AsyncGenerator, List, Dict, Optional
 import google.generativeai as genai
+import cohere
 
 from app.db.vector_store import similarity_search
 
@@ -21,6 +22,7 @@ async def generate_response_stream(
     rag_k: int = 3,
     openai_key: str = None,
     gemini_key: str = None,
+    cohere_key: str = None,
     attachments: Optional[List[dict]] = None,
     user_id: Optional[str] = None
 ) -> AsyncGenerator[str, None]:
@@ -71,12 +73,15 @@ async def generate_response_stream(
 
     # 3. Provider Detection
     is_openai_model = model_name.startswith("gpt-")
+    is_cohere_model = model_name.startswith("command")
     effective_openai_key = openai_key or os.getenv("OPENAI_API_KEY")
     if gemini_key == "123456":
         gemini_key = None
     effective_gemini_key = gemini_key or os.getenv("GEMINI_API_KEY")
+    effective_cohere_key = cohere_key or os.getenv("COHERE_API_KEY")
 
     print("Gemini Key Loaded:", effective_gemini_key)
+    print("Cohere Key Loaded:", effective_cohere_key is not None)
 
     # ---------------- OPENAI ----------------
     if is_openai_model and effective_openai_key:
@@ -120,6 +125,45 @@ async def generate_response_stream(
 
         except Exception as e:
             print("OpenAI Error:", e)
+
+    # ---------------- COHERE ----------------
+    elif is_cohere_model and effective_cohere_key:
+        try:
+            print("Using Cohere Model:", model_name)
+            co = cohere.AsyncClient(api_key=effective_cohere_key)
+            
+            chat_history_cohere = []
+            for msg in chat_history[-5:]:
+                role = "USER" if msg["sender"] == "user" else "CHATBOT"
+                chat_history_cohere.append({
+                    "role": role,
+                    "message": msg["content"]
+                })
+                
+            user_content = query
+            if context_str:
+                user_content = f"Background Context:\n{context_str}\n\nUser Query: {query}"
+
+            response = await co.chat_stream(
+                message=user_content,
+                model=model_name,
+                preamble=system_instructions,
+                chat_history=chat_history_cohere,
+                temperature=temperature
+            )
+
+            async for event in response:
+                if event.event_type == "text-generation":
+                    if event.text:
+                        yield event.text
+            return
+
+        except Exception as e:
+            error_str = str(e)
+            print("Cohere Error:", error_str)
+            if "429" in error_str or "quota" in error_str.lower():
+                yield "AetherMind (Rate Limit): You have hit the Cohere API rate limit. Please try again in a few seconds."
+                return
 
     # ---------------- GEMINI ----------------
     elif effective_gemini_key:

@@ -114,7 +114,7 @@ export const useChatStore = create<ChatStoreState>((set) => ({
   token: typeof window !== 'undefined' ? (localStorage.getItem('aether_token') || localStorage.getItem('auth_token')) : null,
   user: typeof window !== 'undefined' ? (safeJSONParse(localStorage.getItem('aether_user'), null) || (localStorage.getItem('user_email') ? { email: localStorage.getItem('user_email'), id: localStorage.getItem('user_id') } : null)) : null,
   modelSettings: {
-    modelName: typeof window !== 'undefined' ? localStorage.getItem('aether_model_name') || 'gemini-2.5-flash' : 'gemini-2.5-flash',
+    modelName: typeof window !== 'undefined' ? localStorage.getItem('aether_model_name') || 'command-r-plus' : 'command-r-plus',
     temperature: typeof window !== 'undefined' ? parseFloat(localStorage.getItem('aether_temperature') || '0.7') : 0.7,
     systemPrompt: typeof window !== 'undefined' ? localStorage.getItem('aether_system_prompt') || '' : '',
     enableRag: typeof window !== 'undefined' ? localStorage.getItem('aether_enable_rag') !== 'false' : true,
