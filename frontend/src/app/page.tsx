@@ -1075,7 +1075,7 @@ export default function Home() {
             </div>
           </nav >
 
-    <div className="flex-1 flex overflow-hidden relative">
+    <div className="flex flex-1 min-h-0 overflow-hidden relative">
 
       {/* Left Slide-out Sidebar */}
       {isSidebarOpen && (
@@ -1243,7 +1243,7 @@ export default function Home() {
         </div>
       </aside>
 
-    <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+    <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-800 pb-44">
         {!activeChatId ? (
