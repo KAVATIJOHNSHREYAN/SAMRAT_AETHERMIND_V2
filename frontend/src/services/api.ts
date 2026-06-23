@@ -1,21 +1,26 @@
 const getBaseUrl = (): string => {
   if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
+    return process.env.NEXT_PUBLIC_API_URL.endsWith("/api/v1")
+      ? process.env.NEXT_PUBLIC_API_URL
+      : `${process.env.NEXT_PUBLIC_API_URL}/api/v1`;
   }
-  if (typeof window !== 'undefined') {
+
+  if (typeof window !== "undefined") {
     const origin = window.location.origin;
-    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      return 'http://localhost:8000/api/v1';
+
+    if (
+      origin.includes("localhost") ||
+      origin.includes("127.0.0.1")
+    ) {
+      return "http://localhost:8000/api/v1";
     }
-    // In production, the backend is hosted under the routePrefix /_/backend
-    return `${origin}/_/backend/api/v1`;
   }
-  return 'http://localhost:8000/api/v1';
+
+  return "http://localhost:8000/api/v1";
 };
 
 const BASE_URL = getBaseUrl();
-const ROOT_URL = BASE_URL.endsWith('/api/v1') ? BASE_URL.substring(0, BASE_URL.length - 7) : BASE_URL;
-
+const ROOT_URL = BASE_URL.replace("/api/v1", "");
 import { ModelSettings } from '@/store/chatStore';
 
 export function getHeaders(token: string | null): Record<string, string> {
