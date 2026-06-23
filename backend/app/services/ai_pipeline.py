@@ -71,7 +71,26 @@ async def generate_response_stream(
         elif chat_mode == "voice":
             system_instructions += " Give short and conversational responses."
 
-    # 3. Provider Detection
+    # 3. Pre-fallback Static Replies
+    fallback_replies = {
+        "hello": "Hello! AetherMind is online.",
+        "who created you": "I was developed as a portfolio chatbot using FastAPI and Next.js by my creator Mister John Shreyan.",
+        "what is your name": "I am AetherMind."
+    }
+
+    query_lower = query.lower()
+    for key, value in fallback_replies.items():
+        if key in query_lower:
+            words = value.split()
+            for i, word in enumerate(words):
+                if i < len(words) - 1:
+                    yield word + " "
+                else:
+                    yield word
+                await asyncio.sleep(0.05)
+            return
+
+    # 4. Provider Detection
     is_openai_model = active_model.startswith("gpt-")
     is_cohere_model = active_model.startswith("cohere")
     is_gemini_model = active_model.startswith("gemini")
@@ -81,11 +100,15 @@ async def generate_response_stream(
     effective_gemini_key = gemini_key or os.getenv("GEMINI_API_KEY")
     effective_cohere_key = cohere_key or os.getenv("COHERE_API_KEY")
 
-    print("Gemini Key Loaded:", effective_gemini_key)
+    print("Gemini Key Loaded:", effective_gemini_key is not None)
     print("Cohere Key Loaded:", effective_cohere_key is not None)
 
     # ---------------- OPENAI ----------------
-    if is_openai_model and effective_openai_key:
+    if is_openai_model:
+        if not effective_openai_key:
+            yield "AetherMind: Please enter your OpenAI API Key in Model Settings to use GPT models."
+            return
+            
         try:
             from openai import OpenAI
 
@@ -126,9 +149,15 @@ async def generate_response_stream(
 
         except Exception as e:
             print("OpenAI Error:", e)
+            yield f"AI Error: {str(e)}"
+            return
 
     # ---------------- COHERE ----------------
-    elif is_cohere_model and effective_cohere_key:
+    elif is_cohere_model:
+        if not effective_cohere_key:
+            yield "AetherMind: Please enter your Cohere API Key in Model Settings to use Command-R."
+            return
+            
         try:
             # Map deprecated model names to current active versions
             model_map = {
@@ -172,10 +201,16 @@ async def generate_response_stream(
             print("Cohere Error:", error_str)
             if "429" in error_str or "quota" in error_str.lower():
                 yield "AetherMind (Rate Limit): You have hit the Cohere API rate limit. Please try again in a few seconds."
-                return
+            else:
+                yield f"AI Error: {error_str}"
+            return
 
     # ---------------- GEMINI ----------------
-    elif is_gemini_model and effective_gemini_key:
+    elif is_gemini_model:
+        if not effective_gemini_key:
+            yield "AetherMind: No Gemini API Key found. Please enter your API Key in Model Settings to use Gemini."
+            return
+            
         try:
             genai.configure(api_key=effective_gemini_key)
             
@@ -226,37 +261,13 @@ async def generate_response_stream(
         except Exception as e:
             error_str = str(e)
             print("Gemini Error:", error_str)
-            if "429" in error_str or "quota" in error_str.lower():
+            if "429" in error_str or "quota" in error_str.lower() or "exhausted" in error_str.lower():
                 yield "AetherMind (Rate Limit): You have temporarily hit the free tier API rate limit (usually 15 requests per minute). Please wait about 30 seconds before sending your next message!"
-                return
-
-    # ---------------- FALLBACK ----------------
-    fallback_replies = {
-        "hello": "Hello! AetherMind is online.",
-        "who created you": "I was developed as a portfolio chatbot using FastAPI and Next.js by my creator Mister John Shreyan.",
-        "what is your name": "I am AetherMind."
-    }
-
-    matched_reply = None
-    query_lower = query.lower()
-
-    for key, value in fallback_replies.items():
-        if key in query_lower:
-            matched_reply = value
-            break
-    if not matched_reply:
-        try:
-            genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-            model = genai.GenerativeModel(active_model)
-            response = model.generate_content(query)
-            matched_reply = response.text
-        except Exception as e:
-            matched_reply = f"AI Error: {str(e)}"
-    words = matched_reply.split()
-
-    for i, word in enumerate(words):
-        if i < len(words) - 1:
-            yield word + " "
-        else:
-            yield word
-        await asyncio.sleep(0.05)
+            else:
+                yield f"AI Error: {error_str}"
+            return
+            
+    # ---------------- UNKNOWN ----------------
+    else:
+        yield f"AetherMind Error: The selected model '{active_model}' is not supported or missing API keys."
+        return
