@@ -88,8 +88,8 @@ async def generate_response_stream(
 
     # Provider Detection
     is_openai_model = active_model.startswith("gpt-")
-    is_cohere_model = active_model.startswith("cohere")
-    is_gemini_model = active_model.startswith("gemini")
+    is_cohere_model = active_model.startswith("cohere-")
+    is_gemini_model = active_model.startswith("gemini-")
 
     effective_openai_key = openai_key or os.getenv("OPENAI_API_KEY")
     effective_gemini_key = gemini_key or os.getenv("GEMINI_API_KEY")
@@ -151,26 +151,26 @@ async def generate_response_stream(
 
         try:
            print("Incoming active_model:", active_model)
+           print("Is Cohere:", is_cohere_model)
 
-        stripped_model = active_model.replace("cohere-", "")
+           stripped_model = active_model.replace("cohere-", "")
 
-model_map = {
-    "command-r": "command-r-08-2024",
-    "command-r-plus": "command-r-plus-08-2024",
-    "command-light": "command-r7b-12-2024"
-}
+           model_map = {
+               "command-r": "command-r-08-2024",
+               "command-r-plus": "command-r-plus-08-2024",
+               "command-light": "command-r7b-12-2024"
+           }
 
-real_cohere_model = model_map.get(
-    stripped_model,
-    "command-r-plus-08-2024"
-)
+           real_cohere_model = model_map.get(
+               stripped_model,
+               "command-r-plus-08-2024"
+           )
 
-print("Stripped model:", stripped_model)
-print("Mapped model:", real_cohere_model)
+           print("Mapped model:", real_cohere_model)
 
-co = cohere.AsyncClient(
-    api_key=effective_cohere_key
-)
+           co = cohere.AsyncClient(
+               api_key=effective_cohere_key
+           )
 
             chat_history_cohere = []
 
@@ -219,7 +219,7 @@ co = cohere.AsyncClient(
             return
 
     # GEMINI
-    elif is_gemini_model:
+    elif active_model.startswith("gemini-"):
         if not effective_gemini_key:
             yield "AetherMind: Please enter your Gemini API key."
             return
