@@ -130,7 +130,14 @@ async def generate_response_stream(
     # ---------------- COHERE ----------------
     elif is_cohere_model and effective_cohere_key:
         try:
-            real_cohere_model = active_model.replace("cohere-", "")
+            # Map deprecated model names to current active versions
+            model_map = {
+                "cohere-command-r-plus": "command-r-plus-08-2024",
+                "cohere-command-r": "command-r-08-2024",
+                "cohere-command-light": "command-r7b-12-2024"
+            }
+            real_cohere_model = model_map.get(active_model, "command-r-plus-08-2024")
+            
             print("Using Cohere Model:", real_cohere_model)
             co = cohere.AsyncClient(api_key=effective_cohere_key)
             
@@ -146,7 +153,7 @@ async def generate_response_stream(
             if context_str:
                 user_content = f"Background Context:\n{context_str}\n\nUser Query: {query}"
 
-            response = await co.chat_stream(
+            response = co.chat_stream(
                 message=user_content,
                 model=real_cohere_model,
                 preamble=system_instructions,
@@ -155,7 +162,7 @@ async def generate_response_stream(
             )
 
             async for event in response:
-                if event.event_type == "text-generation":
+                if getattr(event, "event_type", None) == "text-generation":
                     if event.text:
                         yield event.text
             return
