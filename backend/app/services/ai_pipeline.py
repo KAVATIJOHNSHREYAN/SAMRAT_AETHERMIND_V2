@@ -7,7 +7,7 @@ import cohere
 
 from app.db.vector_store import similarity_search
 
-# Global dictionary to track last request execution times to avoid API rate limits
+# Global dictionary to track last request execution times
 _user_last_request_time = {}
 
 
@@ -27,98 +27,89 @@ async def generate_response_stream(
     user_id: Optional[str] = None
 ) -> AsyncGenerator[str, None]:
 
-    # 0. Pre-emptive Rate Limiting
-    REQUEST_DELAY = 4.0  # seconds
+    # Rate Limiting
+    REQUEST_DELAY = 4.0
     tracking_key = user_id or "anonymous"
     current_time = time.time()
     last_allowed_time = _user_last_request_time.get(tracking_key, 0.0)
 
     if current_time < last_allowed_time + REQUEST_DELAY:
-        next_allowed_time = last_allowed_time + REQUEST_DELAY
-        wait_time = next_allowed_time - current_time
-        yield f"Please wait a moment ({wait_time:.1f}s) before sending another message to avoid API rate limits...\n\n"
-        _user_last_request_time[tracking_key] = next_allowed_time
+        wait_time = (last_allowed_time + REQUEST_DELAY) - current_time
+        yield f"Please wait {wait_time:.1f}s before sending another message...\n\n"
         await asyncio.sleep(wait_time)
-    else:
-        _user_last_request_time[tracking_key] = current_time
+
+    _user_last_request_time[tracking_key] = time.time()
 
     context_str = ""
 
-    # 1. RAG Search
+    # RAG Search
     if enable_rag and chat_mode in ["general", "voice"]:
         api_key = gemini_key or openai_key
         docs = similarity_search(query, k=rag_k, api_key=api_key)
+
         if docs:
             context_str = "\n".join(
                 [f"- {doc.page_content}" for doc in docs]
             )
 
-    # 2. System Instructions
+    # System Instructions
     system_instructions = (
-        "You are AetherMind, an advanced full-stack AI orchestrator. "
-        "Mister Samrat created me for assistance. If anyone asks who created you or who your creator is, "
-        "always reply clearly that 'Mister Samrat created me for assistance'. "
-        "Provide professional, clean, and concise answers."
+        "You are AetherMind, an advanced AI assistant. "
+        "Mister Samrat created you for assistance. "
+        "Always mention Mister Samrat if asked who created you. "
+        "Provide clean, concise and professional responses."
     )
 
     if system_prompt:
         system_instructions = system_prompt
     else:
         if chat_mode == "coding":
-            system_instructions += " Focus on writing clean code with proper syntax and comments."
+            system_instructions += " Focus on writing clean code."
         elif chat_mode == "debug":
-            system_instructions += " Focus on debugging errors and fixing issues."
+            system_instructions += " Focus on debugging and fixing issues."
         elif chat_mode == "voice":
-            system_instructions += " Give short and conversational responses."
+            system_instructions += " Keep responses short and conversational."
 
-    # 3. Pre-fallback Static Replies
+    # Static Fallback Replies
     fallback_replies = {
         "hello": "Hello! AetherMind is online.",
-        "who created you": "I was developed as a portfolio chatbot using FastAPI and Next.js by my creator Mister John Shreyan.",
+        "who created you": "Mister Samrat created me for assistance.",
         "what is your name": "I am AetherMind."
     }
 
     query_lower = query.lower()
+
     for key, value in fallback_replies.items():
         if key in query_lower:
-            words = value.split()
-            for i, word in enumerate(words):
-                if i < len(words) - 1:
-                    yield word + " "
-                else:
-                    yield word
+            for word in value.split():
+                yield word + " "
                 await asyncio.sleep(0.05)
             return
 
-    # 4. Provider Detection
+    # Provider Detection
     is_openai_model = active_model.startswith("gpt-")
     is_cohere_model = active_model.startswith("cohere")
     is_gemini_model = active_model.startswith("gemini")
+
     effective_openai_key = openai_key or os.getenv("OPENAI_API_KEY")
-    if gemini_key == "123456":
-        gemini_key = None
     effective_gemini_key = gemini_key or os.getenv("GEMINI_API_KEY")
     effective_cohere_key = cohere_key or os.getenv("COHERE_API_KEY")
 
-    print("Gemini Key Loaded:", effective_gemini_key is not None)
-    print("Cohere Key Loaded:", effective_cohere_key is not None)
+    print("Gemini Loaded:", effective_gemini_key is not None)
+    print("Cohere Loaded:", effective_cohere_key is not None)
 
-    # ---------------- OPENAI ----------------
+    # OPENAI
     if is_openai_model:
         if not effective_openai_key:
-            yield "AetherMind: Please enter your OpenAI API Key in Model Settings to use GPT models."
+            yield "AetherMind: Please enter your OpenAI API key."
             return
-            
+
         try:
             from openai import OpenAI
 
             client = OpenAI(api_key=effective_openai_key)
 
             messages = [{"role": "system", "content": system_instructions}]
-
-            user_content = query
-            if context_str:
-                user_content = f"Background Context:\n{context_str}\n\nUser Query: {query}"
 
             for msg in chat_history[-5:]:
                 role = "assistant" if msg["sender"] == "assistant" else "user"
@@ -129,7 +120,7 @@ async def generate_response_stream(
 
             messages.append({
                 "role": "user",
-                "content": user_content
+                "content": query
             })
 
             response = await asyncio.to_thread(
@@ -145,83 +136,97 @@ async def generate_response_stream(
                     content = chunk.choices[0].delta.content
                     if content:
                         yield content
+
             return
 
         except Exception as e:
-            print("OpenAI Error:", e)
             yield f"AI Error: {str(e)}"
             return
 
-    # ---------------- COHERE ----------------
+    # COHERE
     elif is_cohere_model:
         if not effective_cohere_key:
-            yield "AetherMind: Please enter your Cohere API Key in Model Settings to use Command-R."
+            yield "AetherMind: Please enter your Cohere API key."
             return
-            
+
         try:
-            # Strip the 'cohere-' prefix to ensure only valid Cohere models are used
             stripped_model = active_model.replace("cohere-", "")
-            
-            # Map stripped model names to current active versions
+
             model_map = {
-                "command-r-plus": "command-r-plus-08-2024",
-                "command-r": "command-r-08-2024",
-                "command-light": "command-r7b-12-2024"
+                "command-r": "command-r-plus",
+                "command-r-plus": "command-r-plus",
+                "command-light": "command-r"
             }
-            real_cohere_model = model_map.get(stripped_model, "command-r-plus-08-2024")
-            
-            print("Using Cohere Model:", real_cohere_model)
-            co = cohere.AsyncClient(api_key=effective_cohere_key)
-            
+
+            real_cohere_model = model_map.get(
+                stripped_model,
+                "command-r-plus"
+            )
+
+            print("Using Cohere:", real_cohere_model)
+
+            co = cohere.AsyncClient(
+                api_key=effective_cohere_key
+            )
+
             chat_history_cohere = []
+
             for msg in chat_history[-5:]:
                 role = "USER" if msg["sender"] == "user" else "CHATBOT"
+
                 chat_history_cohere.append({
                     "role": role,
                     "message": msg["content"]
                 })
-                
+
             user_content = query
+
             if context_str:
-                user_content = f"Background Context:\n{context_str}\n\nUser Query: {query}"
+                user_content = (
+                    f"Background Context:\n{context_str}\n\n"
+                    f"User Query: {query}"
+                )
 
             response = await co.chat_stream(
-                message=user_content,
                 model=real_cohere_model,
-                preamble=system_instructions,
+                message=user_content,
+                temperature=temperature,
                 chat_history=chat_history_cohere,
-                temperature=temperature
+                preamble=system_instructions
             )
 
             async for event in response:
-                if getattr(event, "event_type", None) == "text-generation":
-                    if event.text:
-                        yield event.text
+                if hasattr(event, "text") and event.text:
+                    yield event.text
+
             return
 
         except Exception as e:
             error_str = str(e)
-            print("Cohere Error:", error_str)
-            if "429" in error_str or "quota" in error_str.lower():
-                yield "AetherMind (Rate Limit): You have hit the Cohere API rate limit. Please try again in a few seconds."
+
+            if "404" in error_str:
+                yield "AetherMind: Invalid Cohere model selected."
+
+            elif "429" in error_str:
+                yield "AetherMind: Cohere API rate limit reached."
+
             else:
                 yield f"AI Error: {error_str}"
+
             return
 
-    # ---------------- GEMINI ----------------
+    # GEMINI
     elif is_gemini_model:
         if not effective_gemini_key:
-            yield "AetherMind: No Gemini API Key found. Please enter your API Key in Model Settings to use Gemini."
+            yield "AetherMind: Please enter your Gemini API key."
             return
-            
+
         try:
             genai.configure(api_key=effective_gemini_key)
-            
+
             generation_config = genai.types.GenerationConfig(
                 temperature=temperature
             )
-
-            print("Using Gemini Model:", active_model)
 
             model = genai.GenerativeModel(
                 model_name=active_model,
@@ -232,19 +237,18 @@ async def generate_response_stream(
 
             if context_str:
                 prompt_parts.append(
-                    f"Background Context:\n{context_str}\n"
+                    f"Background Context:\n{context_str}"
                 )
 
-            if chat_history:
-                prompt_parts.append("Conversation History:")
+            for msg in chat_history[-5:]:
+                sender = "User" if msg["sender"] == "user" else "Assistant"
+                prompt_parts.append(
+                    f"{sender}: {msg['content']}"
+                )
 
-                for msg in chat_history[-5:]:
-                    sender = "User" if msg["sender"] == "user" else "Assistant"
-                    prompt_parts.append(
-                        f"{sender}: {msg['content']}"
-                    )
-
-            prompt_parts.append(f"User Query: {query}")
+            prompt_parts.append(
+                f"User Query: {query}"
+            )
 
             prompt = "\n".join(prompt_parts)
 
@@ -263,14 +267,16 @@ async def generate_response_stream(
 
         except Exception as e:
             error_str = str(e)
-            print("Gemini Error:", error_str)
-            if "429" in error_str or "quota" in error_str.lower() or "exhausted" in error_str.lower():
-                yield "AetherMind (Rate Limit): You have temporarily hit the free tier API rate limit (usually 15 requests per minute). Please wait about 30 seconds before sending your next message!"
+
+            if "429" in error_str or "quota" in error_str.lower():
+                yield "AetherMind: Gemini quota exceeded. Please wait 30 seconds."
+
             else:
                 yield f"AI Error: {error_str}"
+
             return
-            
-    # ---------------- UNKNOWN ----------------
+
+    # UNKNOWN MODEL
     else:
-        yield f"AetherMind Error: The selected model '{active_model}' is not supported or missing API keys."
+        yield f"AetherMind Error: Model '{active_model}' not supported."
         return
