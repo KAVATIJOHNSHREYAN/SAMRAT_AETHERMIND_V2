@@ -14,7 +14,7 @@ async def generate_response_stream(
     query: str,
     chat_history: List[Dict[str, str]],
     chat_mode: str = "general",
-    model_name: str = "gemini-2.5-flash",
+    model_name: str = "gemini-2.0-flash",
     temperature: float = 0.7,
     system_prompt: str = None,
     enable_rag: bool = True,
