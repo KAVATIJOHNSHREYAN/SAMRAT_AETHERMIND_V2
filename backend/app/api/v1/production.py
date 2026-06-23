@@ -72,7 +72,7 @@ class ChatRequest(BaseModel):
     content: str
     chat_id: Optional[str] = None
     chat_history: Optional[List[ChatMessageHistory]] = None
-    model_name: Optional[str] = "gemini-1.5-flash"
+    model_name: Optional[str] = "gemini-2.5-flash"
     temperature: Optional[float] = 0.7
     system_prompt: Optional[str] = None
     enable_rag: Optional[bool] = True
@@ -583,7 +583,7 @@ async def resume_analyze_endpoint(
                 query=prompt,
                 chat_history=[],
                 chat_mode="general",
-                model_name="gemini-1.5-flash" if not x_openai_api_key else "gpt-4o-mini",
+                model_name="gemini-2.5-flash" if not x_openai_api_key else "gpt-4o-mini",
                 temperature=0.3,
                 openai_key=x_openai_api_key,
                 gemini_key=x_gemini_api_key,

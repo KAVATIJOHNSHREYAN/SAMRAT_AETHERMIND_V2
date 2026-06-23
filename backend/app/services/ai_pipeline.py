@@ -14,7 +14,7 @@ async def generate_response_stream(
     query: str,
     chat_history: List[Dict[str, str]],
     chat_mode: str = "general",
-    model_name: str = "gemini-1.5-flash",
+    model_name: str = "gemini-2.5-flash",
     temperature: float = 0.7,
     system_prompt: str = None,
     enable_rag: bool = True,
@@ -129,7 +129,7 @@ async def generate_response_stream(
             )
 
             # FORCE MODEL FIX
-            selected_model = "gemini-1.5-flash"
+            selected_model = "gemini-2.5-flash"
 
             print("Using Gemini Model:", selected_model)
 
@@ -195,7 +195,7 @@ async def generate_response_stream(
     if not matched_reply:
         try:
             genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-2.5-flash")
             response = model.generate_content(query)
             matched_reply = response.text
         except Exception as e:

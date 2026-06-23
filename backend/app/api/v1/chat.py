@@ -32,7 +32,7 @@ class Attachment(BaseModel):
 
 class MessageCreate(BaseModel):
     content: str
-    model_name: Optional[str] = "gemini-1.5-flash"
+    model_name: Optional[str] = "gemini-2.5-flash"
     temperature: Optional[float] = 0.7
     system_prompt: Optional[str] = None
     enable_rag: Optional[bool] = True

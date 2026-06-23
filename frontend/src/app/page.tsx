@@ -2057,7 +2057,7 @@ export default function Home() {
                     className={`w-full px-3 py-2 border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-violet-500 font-semibold ${isDark ? 'bg-slate-900 border-slate-850 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-900'
                       }`}
                   >
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast, default)</option>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Fast, default)</option>
                     <option value="gemini-1.5-pro">Gemini 1.5 Pro (Analytical)</option>
                     <option value="gpt-4o-mini">OpenAI GPT-4o Mini (Efficient)</option>
                     <option value="gpt-4o">OpenAI GPT-4o (Premium)</option>
